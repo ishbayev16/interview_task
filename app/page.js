@@ -1,113 +1,108 @@
+"use client"; // This is a client component 👈🏽
+
 import Image from 'next/image'
+import { Fragment, useState, useEffect } from 'react'
+import { Listbox, Transition } from '@headlessui/react'
+import { CheckIcon, ChevronUpDownIcon } from '@heroicons/react/20/solid'
+
 
 export default function Home() {
+  const [data, setData] = useState(null)
+  const [isLoading, setLoading] = useState(true)
+  const [localLoading, setLocalLoading] = useState(false)
+  const [currency, setCurrency] = useState(null);
+
+  const [selected, setSelected] = useState(null)
+
+
+  useEffect(() => {
+    console.log('run')
+      fetch('https://restcountries.com/v3.1/region/europe?fields=name,flags')
+      .then((res) => res.json())
+      .then((data) => {
+        setData(data)
+        setLoading(false)
+      })
+  }, [])
+
+
+  useEffect(() => {
+    if(selected){
+      setLocalLoading(true);
+      fetch('https://api.api-ninjas.com/v1/country?name='+selected.name.official, 
+        {
+          method: "GET",
+          withCredentials: true,
+          headers: {
+            "X-Api-Key": "ZoDpSzuq/9bSfBDV6nOfOw==I2LhHetDaYEmNugf",
+            "Content-Type": "application/json"
+          }
+        })
+      .then((res) => res.json())
+      .then((data) => {
+        setCurrency(data)
+        setLocalLoading(false)
+      })
+    }
+  }, [selected])
+ 
+  if (isLoading) return <p className='center'>Loading...</p>
+  if (!data) return <p className='center'>No data could be fetched</p>
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.js</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+    <main className='center' >
+
+    
+      <Listbox value={selected} onChange={setSelected}>
+        <div className="relative mt-1 w-2/3">
+          <Listbox.Button className="relative w-full cursor-default rounded-lg bg-white py-2 pl-3 pr-10 text-left shadow-md focus:outline-none focus-visible:border-indigo-500 focus-visible:ring-2 focus-visible:ring-white/75 focus-visible:ring-offset-2 focus-visible:ring-offset-orange-300 sm:text-sm">
+            <span className="flex truncate">{selected ? <><img src={selected.flags.svg} alt={selected.flags.alt} style={{height: 22, width: 30}} className="mr-2"/>  {selected.name.common} </> : "Select a country"}</span>
+            <span className="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-2">
+              <ChevronUpDownIcon
+                className="h-5 w-5 text-gray-400"
+                aria-hidden="true"
+              />
+            </span>
+          </Listbox.Button>
+          <Transition
+            as={Fragment}
+            leave="transition ease-in duration-100"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
           >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
+            <Listbox.Options className="absolute mt-1 max-h-60 w-full overflow-auto rounded-md bg-white py-1 text-base shadow-lg ring-1 ring-black/5 focus:outline-none sm:text-sm">
+              {data.map((country, Idx) => (
+                <Listbox.Option
+                  key={Idx}
+                  className={({ active }) =>
+                    `relative cursor-default select-none py-2 pl-4 pr-4 ${
+                      active ? 'bg-amber-100 text-amber-900' : 'text-gray-900'
+                    }`
+                  }
+                  value={country}
+                >
+                  {({ selected }) => (
+                    <>
+                      <span
+                        className={`flex truncate ${
+                          selected ? 'font-medium' : 'font-normal'
+                        }`}
+                      >
+                        <img src={country.flags.svg} alt={country.flags.alt} style={{height: 22, width: 30}} className="mr-2"/>
+              
+                        {country.name.common}
+                      </span>
+                    </>
+                  )}
+                </Listbox.Option>
+              ))}
+            </Listbox.Options>
+          </Transition>
         </div>
-      </div>
+      </Listbox>  
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+      <div className='flex items-center ml-10 w-1/3'> {localLoading ? 'loading....' : selected ? currency && currency.length > 0 ? <>{currency[0]?.currency?.code} {currency[0]?.gdp}</>: 'GDP not found!' : ''} </div>                  
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
-
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800 hover:dark:bg-opacity-30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
-
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
     </main>
   )
 }
